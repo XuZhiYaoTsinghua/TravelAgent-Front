@@ -1,0 +1,173 @@
+{
+  "id": "plan_001",
+  "request_id": "req_001",
+  "destination": "Kyoto, Japan",
+  "start_date": "2026-04-10",
+  "end_date": "2026-04-13",
+  "travelers": 2,
+  "total_cost_estimate": 2840,
+  "status": "draft",
+  "created_at": "2026-01-15T10:35:00Z",
+  "items": [
+    {
+      "id": "pi_001",
+      "day": 1,
+      "time": "09:00",
+      "place": {
+        "id": "JP_010",
+        "name": "Tokyo Station",
+        "lat": 35.6804,
+        "lng": 139.7690,
+        "category": "transport",
+        "description": "Major rail hub for Shinkansen departures"
+      },
+      "activity": "Board Nozomi Shinkansen to Kyoto. Reserved seats, green car.",
+      "duration_minutes": 140,
+      "cost_estimate": 280
+    },
+    {
+      "id": "pi_002",
+      "day": 1,
+      "time": "12:30",
+      "place": {
+        "id": "JP_011",
+        "name": "Kichi Kichi Omurice",
+        "lat": 35.0036,
+        "lng": 135.7780,
+        "category": "food",
+        "description": "Famous theatrical omelet rice restaurant in Pontocho Alley"
+      },
+      "activity": "Lunch reservation for the theatrical omelet rice experience.",
+      "duration_minutes": 90,
+      "cost_estimate": 45
+    },
+    {
+      "id": "pi_003",
+      "day": 1,
+      "time": "15:00",
+      "place": {
+        "id": "JP_001",
+        "name": "Kiyomizu-dera Temple",
+        "lat": 34.9949,
+        "lng": 135.7850,
+        "category": "sightseeing",
+        "description": "UNESCO World Heritage temple with panoramic city views"
+      },
+      "activity": "Explore the temple grounds and enjoy panoramic views of Kyoto.",
+      "duration_minutes": 120,
+      "cost_estimate": 8
+    },
+    {
+      "id": "pi_004",
+      "day": 1,
+      "time": "18:00",
+      "place": {
+        "id": "JP_012",
+        "name": "Hoshinoya Ryokan",
+        "lat": 35.0170,
+        "lng": 135.6760,
+        "category": "lodging",
+        "description": "Traditional luxury ryokan with private onsen in Arashiyama"
+      },
+      "activity": "Check-in and evening soak in the private onsen.",
+      "duration_minutes": 480,
+      "cost_estimate": 620
+    },
+    {
+      "id": "pi_005",
+      "day": 2,
+      "time": "07:30",
+      "place": {
+        "id": "JP_002",
+        "name": "Arashiyama Bamboo Grove",
+        "lat": 35.0170,
+        "lng": 135.6720,
+        "category": "sightseeing",
+        "description": "Iconic bamboo forest path, best at dawn"
+      },
+      "activity": "Early morning walk through the bamboo forest.",
+      "duration_minutes": 60,
+      "cost_estimate": 0
+    },
+    {
+      "id": "pi_006",
+      "day": 2,
+      "time": "10:00",
+      "place": {
+        "id": "JP_003",
+        "name": "Tenryu-ji Temple",
+        "lat": 35.0160,
+        "lng": 135.6760,
+        "category": "activity",
+        "description": "One of Japan's finest Zen gardens"
+      },
+      "activity": "Stroll the Zen garden and tour the temple hall.",
+      "duration_minutes": 90,
+      "cost_estimate": 10
+    },
+    {
+      "id": "pi_007",
+      "day": 2,
+      "time": "13:00",
+      "place": {
+        "id": "JP_013",
+        "name": "Gion Kaiseki Restaurant",
+        "lat": 35.0036,
+        "lng": 135.7780,
+        "category": "food",
+        "description": "Seasonal multi-course Japanese dining in Gion"
+      },
+      "activity": "Seasonal kaiseki lunch in the Gion district.",
+      "duration_minutes": 120,
+      "cost_estimate": 180
+    },
+    {
+      "id": "pi_008",
+      "day": 3,
+      "time": "09:00",
+      "place": {
+        "id": "JP_004",
+        "name": "Fushimi Inari Taisha",
+        "lat": 34.9671,
+        "lng": 135.7727,
+        "category": "sightseeing",
+        "description": "Famous shrine with thousands of vermilion torii gates"
+      },
+      "activity": "Hike through the thousands of vermilion torii gates.",
+      "duration_minutes": 150,
+      "cost_estimate": 0
+    },
+    {
+      "id": "pi_009",
+      "day": 3,
+      "time": "14:00",
+      "place": {
+        "id": "JP_014",
+        "name": "Gion Tea House",
+        "lat": 35.0036,
+        "lng": 135.7780,
+        "category": "activity",
+        "description": "Traditional matcha tea ceremony venue in Gion"
+      },
+      "activity": "Traditional matcha tea ceremony with a local master.",
+      "duration_minutes": 90,
+      "cost_estimate": 75
+    },
+    {
+      "id": "pi_010",
+      "day": 4,
+      "time": "08:00",
+      "place": {
+        "id": "JP_015",
+        "name": "Kansai International Airport",
+        "lat": 34.7855,
+        "lng": 135.4392,
+        "category": "transport",
+        "description": "KIX international airport, accessible via Haruka Express"
+      },
+      "activity": "Haruka Express from Kyoto Station to KIX for departure.",
+      "duration_minutes": 100,
+      "cost_estimate": 38
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+[
+  {
+    "id": "evt_001",
+    "type": "thinking",
+    "content": "User wants a 4-day trip to Kyoto for 2 travelers in April. I need to find transport, lodging, and activities.",
+    "timestamp": "2026-01-15T10:30:05Z"
+  },
+  {
+    "id": "evt_002",
+    "type": "action",
+    "content": "Calling search_flights for Tokyo → Osaka on 2026-04-10",
+    "metadata": { "tool": "search_flights", "params": { "origin": "Tokyo", "destination": "Osaka", "date": "2026-04-10" } },
+    "timestamp": "2026-01-15T10:30:12Z"
+  },
+  {
+    "id": "evt_003",
+    "type": "observation",
+    "content": "Found 3 flight options. Nozomi Shinkansen is faster and more convenient than flying for this route.",
+    "metadata": { "results_count": 3, "recommended": "shinkansen" },
+    "timestamp": "2026-01-15T10:30:20Z"
+  },
+  {
+    "id": "evt_004",
+    "type": "thinking",
+    "content": "Shinkansen is the better choice. Now I need lodging in a traditional setting.",
+    "timestamp": "2026-01-15T10:30:25Z"
+  },
+  {
+    "id": "evt_005",
+    "type": "action",
+    "content": "Calling search_hotels for ryokans in Arashiyama",
+    "metadata": { "tool": "search_hotels", "params": { "area": "Arashiyama", "type": "ryokan" } },
+    "timestamp": "2026-01-15T10:30:30Z"
+  },
+  {
+    "id": "evt_006",
+    "type": "observation",
+    "content": "Hoshinoya Ryokan has availability Apr 10-13. Luxury tier with private onsen.",
+    "metadata": { "hotel": "Hoshinoya", "price_per_night": 310 },
+    "timestamp": "2026-01-15T10:30:38Z"
+  },
+  {
+    "id": "evt_007",
+    "type": "thinking",
+    "content": "Lodging confirmed. Next: reserve popular restaurants and check seasonal weather.",
+    "timestamp": "2026-01-15T10:30:42Z"
+  },
+  {
+    "id": "evt_008",
+    "type": "action",
+    "content": "Queued: search_restaurants, check_weather, generate_itinerary",
+    "metadata": { "queued_tools": ["search_restaurants", "check_weather", "generate_itinerary"] },
+    "timestamp": "2026-01-15T10:30:48Z"
+  },
+  {
+    "id": "evt_009",
+    "type": "final",
+    "content": "Draft itinerary ready for review. Awaiting user confirmation before booking.",
+    "timestamp": "2026-01-15T10:31:00Z"
+  }
+]
