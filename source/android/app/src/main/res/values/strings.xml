@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Travel Agent AI</string>
-    <string name="title_activity_main">Travel Agent AI</string>
-    <string name="package_name">com.voyageai.app</string>
-    <string name="custom_url_scheme">com.voyageai.app</string>
-</resources>
