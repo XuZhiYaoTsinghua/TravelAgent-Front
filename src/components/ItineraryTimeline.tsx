@@ -222,7 +222,7 @@ function TimelineCard({ item, index, activeItemId, affectedItemIds, city, onSele
         <div className={`absolute left-[18px] top-0 bottom-0 w-px ${isAffected ? 'bg-amber-300' : 'bg-slate-200'} group-last:bottom-auto`} />
         <div className={`absolute left-[15px] top-3 w-2 h-2 rounded-full ${isAffected ? 'bg-amber-400' : 'bg-sky-400'} border-2 border-white`} />
         <div
-          className={`py-2 px-3 rounded-xl border flex items-center gap-2 text-xs transition animate-fadeIn ${
+          className={`py-2 px-3 rounded-xl border flex items-start gap-2 text-xs transition animate-fadeIn ${
             isAffected
               ? 'border-amber-300 bg-amber-50/60 text-amber-700'
               : 'border-sky-100 bg-sky-50/60 text-slate-500 hover:shadow-sm'
@@ -230,28 +230,38 @@ function TimelineCard({ item, index, activeItemId, affectedItemIds, city, onSele
           style={{ animationDelay: `${index * 50}ms` }}
         >
           <span
-            className="flex-shrink-0 inline-flex"
+            className="flex-shrink-0 inline-flex mt-0.5"
             title={modeCfg ? t(modeCfg.labelKey) : undefined}
             aria-label={modeCfg ? t(modeCfg.labelKey) : undefined}
           >
             <ModeIcon className={`w-3.5 h-3.5 ${isAffected ? 'text-amber-500' : 'text-sky-500'}`} />
           </span>
-          {/* 站点对名称（「北京南站 → 上海虹桥站」）：不再 truncate——长名自动换行完整显示，
-              此前被压成省略号且无任何途径看全文 */}
-          <span className="font-medium min-w-0 break-words leading-snug">{item.place.name}</span>
-          <span className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-            {item.distance_km != null && (
-              <span className="flex items-center gap-1">
-                {t('commuteApprox')}
-                {item.distance_km}
-                {t('approxKm')}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-medium min-w-0 break-words leading-snug">{item.place.name}</span>
+              <span className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                {item.distance_km != null && (
+                  <span className="flex items-center gap-1">
+                    {t('commuteApprox')}
+                    {item.distance_km}
+                    {t('approxKm')}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {item.duration_minutes} {t('minUnit')}
+                </span>
               </span>
+            </div>
+            {(item.transit_text || (item.transport_from && item.transport_to)) && (
+              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                {item.transit_text && <span className="text-sky-500">{item.transit_text}</span>}
+                {item.transport_from && item.transport_to && (
+                  <span className="min-w-0 break-words">{item.transport_from} → {item.transport_to}</span>
+                )}
+              </div>
             )}
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {item.duration_minutes} {t('minUnit')}
-            </span>
-          </span>
+          </div>
         </div>
       </div>
     );
@@ -281,6 +291,11 @@ function TimelineCard({ item, index, activeItemId, affectedItemIds, city, onSele
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-bold flex-shrink-0">
                 <Check className="w-2.5 h-2.5" />
                 {t('mealPicked')}
+              </span>
+            )}
+            {item.dining_note && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold flex-shrink-0">
+                {item.dining_note}
               </span>
             )}
             {isAffected && <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}

@@ -53,6 +53,12 @@ export interface PlanItem {
   transport_mode?: string;
   // 餐段被用户从候选列表手动选定（区别于 A 侧默认安排）
   custom_meal?: boolean;
+  // B 侧 Place.details.dining_note：午餐错过窗口 → 景区内就餐备注
+  dining_note?: string;
+  // B 侧 Place.details：transport 段起点/终点/方式描述（公交起终站等）
+  transport_from?: string;
+  transport_to?: string;
+  transit_text?: string;
 }
 
 // B 侧 food 工具直调返回的候选餐厅（POST /api/tools/food/invoke/，附近搜索）

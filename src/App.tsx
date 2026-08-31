@@ -142,6 +142,10 @@ function App() {
         ]);
         if (tc) setToolCalls(tc);
         if (hl) setHotels(hl);
+        // B 侧推送了重规划：触发通知三通道（列表+系统推送+banner）
+        const affected = refreshed?.items[0]?.id;
+        notificationService.simulateIncoming('plan_update', affected, lang);
+        if (affected) setAffectedItemIds((prev) => [...new Set([...prev, affected])]);
       }
     } catch {
       // 轮询失败静默，下一轮重试
@@ -516,7 +520,10 @@ function App() {
 
             <div className="lg:col-span-3 space-y-6">
               <AgentLog events={localizedEvents} />
-              <ActionQueue actions={localizedActions} />
+              <ActionQueue actions={localizedActions} onApprove={(id) => {
+                api.approveAction(id).catch(() => {});
+                setActions((prev) => prev.map((a) => a.id === id ? { ...a, status: 'running' } : a));
+              }} />
             </div>
           </div>
         </main>

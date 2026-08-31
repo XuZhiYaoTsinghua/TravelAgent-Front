@@ -97,6 +97,7 @@ const en = {
   statusRunning: 'Running',
   statusDone: 'Done',
   statusFailed: 'Failed',
+  approve: 'Approve',
 
   // AgentLog
   agentLog: 'Agent Reasoning Log',
@@ -314,6 +315,7 @@ const zh: typeof en = {
   statusRunning: '执行中',
   statusDone: '完成',
   statusFailed: '失败',
+  approve: '确认执行',
 
   agentLog: '智能体推理日志',
   events: '条事件',

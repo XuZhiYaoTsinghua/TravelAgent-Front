@@ -16,9 +16,10 @@ function useStatusConfig() {
 
 interface ActionQueueProps {
   actions: AgentAction[];
+  onApprove?: (id: string) => void;
 }
 
-export default function ActionQueue({ actions }: ActionQueueProps) {
+export default function ActionQueue({ actions, onApprove }: ActionQueueProps) {
   const { t } = useI18n();
   const statusConfig = useStatusConfig();
 
@@ -51,7 +52,17 @@ export default function ActionQueue({ actions }: ActionQueueProps) {
                   : 'border-slate-100 bg-slate-50/50'
               }`}
             >
-              <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${cfg.color} ${action.status === 'running' ? 'animate-spin' : ''}`} />
+              {action.status === 'pending' && onApprove ? (
+                <button
+                  onClick={() => onApprove(action.id)}
+                  className="flex-shrink-0 mt-0.5 hover:scale-110 transition-transform"
+                  title={t('approve') || 'Approve'}
+                >
+                  <Icon className={`w-5 h-5 ${cfg.color} hover:text-teal-500 cursor-pointer`} />
+                </button>
+              ) : (
+                <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${cfg.color} ${action.status === 'running' ? 'animate-spin' : ''}`} />
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <code className="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{action.tool}</code>

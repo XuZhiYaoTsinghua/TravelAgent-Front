@@ -185,8 +185,19 @@ export function normalizeTransportMode(mode?: string | null, name?: string | nul
 // B 响应里不含人数，由调用方传入最近一次提交的 travelers 用于回显
 export function timelineToPlan(tl: BTripTimeline, travelers = 1): Plan {
   const items: PlanItem[] = [];
-  for (const day of tl.days ?? []) {
+  const days = tl.days ?? [];
+  const maxDay = days.reduce((mx, d) => Math.max(mx, d.day), 0);
+  for (const day of days) {
     for (const p of day.items ?? []) {
+      // 屏蔽 B 侧 planner 的"填充槽"占位条目。实测（2026-08-31 北京规划）：
+      // "等待晚餐时间"的 category 是 scenic 而非 food，故不能按 category 过滤，
+      // 必须按名称模式统一屏蔽（等待午餐时间/等待晚餐时间/等待景点开放/等待酒店入住…）
+      if (/^等待/.test(p.name) || /等待.{0,6}(时间|开放|入住|闭馆)/.test(p.name)) continue;
+      // 屏蔽无餐厅的空餐段槽：name 只是"午餐/晚餐"等餐段名且无 restaurant_name，
+      // 展示无价值且会与真实餐厅条目重复出现
+      if (p.category === 'food' && !p.restaurant_name && /^(早餐|午餐|晚餐|夜宵|宵夜)$/.test(p.name)) continue;
+      // 屏蔽最后一天的酒店（返程日不再住宿）
+      if (p.category === 'hotel' && day.day === maxDay) continue;
       const isMeal = p.category === 'food' && p.restaurant_name;
       // 交通方式：details.mode / transit_text 优先，名称关键词兜底（城际段名带「（自驾）」等）
       const transportMode =
@@ -217,6 +228,10 @@ export function timelineToPlan(tl: BTripTimeline, travelers = 1): Plan {
         cost_estimate: p.price,
         ...(transportMode ? { transport_mode: transportMode } : {}),
         ...(realDistance != null && realDistance > 0 ? { distance_km: realDistance } : {}),
+        ...(p.details?.dining_note ? { dining_note: String(p.details.dining_note) } : {}),
+        ...(p.category === 'transport' && p.details?.from ? { transport_from: String(p.details.from) } : {}),
+        ...(p.category === 'transport' && p.details?.to ? { transport_to: String(p.details.to) } : {}),
+        ...(p.category === 'transport' && p.details?.transit_text ? { transit_text: String(p.details.transit_text) } : {}),
       });
     }
   }
