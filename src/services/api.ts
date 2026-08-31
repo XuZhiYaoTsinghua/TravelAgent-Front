@@ -11,6 +11,8 @@ import type {
   ToolCallRecord,
   HotelCandidate,
   RestaurantOption,
+  ChatMessage,
+  ChatResult,
 } from '../types';
 import {
   userRequestToPlanBody,
@@ -23,7 +25,6 @@ import {
   mockUserRequest,
   mockPlan,
   mockEvents,
-  mockDecisions,
   mockActions,
   mockActionResults,
 } from '../mock';
@@ -40,6 +41,8 @@ let lastTravelers = 1;
 // 规划是长请求（实测 20~70s），其余接口 15s 足够
 const TIMEOUT_PLAN_MS = 90_000;
 const TIMEOUT_DEFAULT_MS = 15_000;
+// 对话接口 B 文档标称 3~10s，放宽到 30s 容忍 LLM 偶发慢响应
+const TIMEOUT_CHAT_MS = 30_000;
 
 function isAbortError(e: unknown): boolean {
   return e instanceof DOMException || (e instanceof Error && e.name === 'AbortError');
@@ -108,30 +111,6 @@ export const api = {
       return mockEvents.map((e) => ({ ...e, id: `${e.id}_${requestId}` }));
     }
     return fetchJSON<AgentEvent[]>(`/events?request_id=${requestId}`);
-  },
-
-  async getDecisions(requestId: string): Promise<AgentDecision[]> {
-    if (USE_MOCK) {
-      await new Promise((r) => setTimeout(r, 100));
-      return mockDecisions.map((d) => ({ ...d, id: `${d.id}_${requestId}` }));
-    }
-    return fetchJSON<AgentDecision[]>(`/decisions?request_id=${requestId}`);
-  },
-
-  async resolveDecision(decisionId: string, optionId: string): Promise<AgentDecision> {
-    if (USE_MOCK) {
-      await new Promise((r) => setTimeout(r, 200));
-      return {
-        ...mockDecisions[0],
-        id: decisionId,
-        status: 'approved',
-        options: mockDecisions[0].options.map((o) => ({ ...o, selected: o.id === optionId })),
-      };
-    }
-    return fetchJSON<AgentDecision>(`/decisions/${decisionId}/resolve`, {
-      method: 'POST',
-      body: JSON.stringify({ option_id: optionId }),
-    });
   },
 
   async getActions(requestId: string): Promise<AgentAction[]> {
@@ -235,5 +214,23 @@ export const api = {
       throw new Error(raw.error || 'restaurant candidates unavailable');
     }
     return raw.data;
+  },
+
+  // ===== B 侧对话接口（旅行助手，POST /api/chat/，docs/chat_api.md）=====
+  // v1 纯对话：系统提示词由 B 侧注入当前行程/用户需求，此处只传 message + 最近 history。
+  // 服务端无状态：history 由调用方（ChatPanel）维护，仅传最近 20 条。
+  async chat(message: string, history: ChatMessage[] = []): Promise<ChatResult> {
+    if (USE_MOCK) {
+      await new Promise((r) => setTimeout(r, 1200));
+      return {
+        reply: `[Mock] 已收到你的消息：「${message}」。Mock 模式下对话不可用，请配置 VITE_API_URL 后重试。`,
+        elapsed_ms: 1200,
+      };
+    }
+    return fetchJSON<ChatResult>('/chat/', {
+      method: 'POST',
+      body: JSON.stringify({ message, history: history.slice(-20) }),
+      timeoutMs: TIMEOUT_CHAT_MS,
+    });
   },
 };

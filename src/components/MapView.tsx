@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { Navigation } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Navigation, Maximize2, Minimize2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -61,8 +61,29 @@ interface MapViewProps {
   places: Place[];
 }
 
+// 全屏切换时容器尺寸剧变，调用 invalidateSize 让 Leaflet 重新计算瓦片布局
+function ResizeHandler({ isFullscreen }: { isFullscreen: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => map.invalidateSize(), 50);
+    return () => clearTimeout(timer);
+  }, [map, isFullscreen]);
+  return null;
+}
+
 export default function MapView({ places: allPlaces }: MapViewProps) {
   const { lang, t } = useI18n();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Esc 键退出全屏
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isFullscreen]);
 
   // B 侧 timeline 的 food/transport/hotel 项坐标常为 0，混入中心点计算会把地图
   // 拖到 (0,0) 与目的地的中点（公海区域），高德瓦片在高缩放级别无数据 → 整片空白
@@ -113,20 +134,41 @@ export default function MapView({ places: allPlaces }: MapViewProps) {
   const useAmap = lang === 'zh';
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-      <div className="flex items-center gap-2 mb-4">
+    <div className={isFullscreen
+      ? 'fixed inset-0 z-[3000] bg-white p-4 flex flex-col'
+      : 'bg-white rounded-2xl shadow-sm border border-slate-200 p-5'
+    }>
+      <div className={`flex items-center gap-2 ${isFullscreen ? 'mb-3' : 'mb-4'}`}>
         <Navigation className="w-4 h-4 text-teal-600" />
-        <h3 className="text-sm font-semibold text-slate-800">{t('mapTitle')}</h3>
+        <h3 className="text-sm font-semibold text-slate-800 flex-1">{t('mapTitle')}</h3>
+        <button
+          onClick={() => setIsFullscreen((v) => !v)}
+          className={isFullscreen
+            ? 'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white bg-slate-700 hover:bg-slate-800 shadow-md transition-colors'
+            : 'flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-600 hover:bg-slate-100 transition-colors'
+          }
+          title={isFullscreen ? t('mapExitFullscreen') : t('mapFullscreen')}
+        >
+          {isFullscreen
+            ? <Minimize2 className="w-5 h-5" />
+            : <Maximize2 className="w-3.5 h-3.5" />
+          }
+          <span>{isFullscreen ? t('mapExitFullscreen') : t('mapFullscreen')}</span>
+        </button>
       </div>
 
-      <div className="h-72 rounded-xl overflow-hidden border border-slate-200 z-0">
+      <div className={isFullscreen
+        ? 'flex-1 rounded-xl overflow-hidden border border-slate-200 z-0'
+        : 'h-72 rounded-xl overflow-hidden border border-slate-200 z-0'
+      }>
         <MapContainer
           center={[centerLat, centerLng]}
           zoom={12}
-          scrollWheelZoom={false}
+          scrollWheelZoom={isFullscreen}
           style={{ height: '100%', width: '100%' }}
         >
           <FitBounds bounds={bounds} />
+          <ResizeHandler isFullscreen={isFullscreen} />
           {useAmap ? (
             <TileLayer
               attribution='&copy; 高德地图'

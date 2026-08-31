@@ -1,5 +1,5 @@
 import type { Lang } from '../i18n/translations';
-import type { Plan, AgentEvent, AgentDecision, AgentAction } from '../types';
+import type { Plan, AgentEvent, AgentAction } from '../types';
 
 const planZh: Record<string, { activity?: string; placeName?: string; placeDesc?: string }> = {
   'place_kiyomizu': { placeName: '清水寺', placeDesc: '世界遗产木造寺院，俯瞰京都全景' },
@@ -24,34 +24,6 @@ const eventZh: Record<string, string> = {
   'evt_007': '住宿已确认。下一步：预订热门餐厅和查看天气。',
   'evt_008': '已排队：search_restaurants、check_weather、generate_itinerary',
   'evt_009': '行程草案已准备好，等待用户确认后再预订。',
-};
-
-const decisionZh: Record<string, { title: string; description: string; options: Record<string, { label: string; description: string }> }> = {
-  'dec_001': {
-    title: '审核行程草案',
-    description: '智能体准备了一份4天京都行程，共10项活动。请审核并批准以继续预订。',
-    options: {
-      'opt_001': { label: '批准并预订', description: '确认行程并继续预订所有项目' },
-      'opt_002': { label: '要求修改', description: '要求智能体修改行程的特定部分' },
-      'opt_003': { label: '拒绝', description: '放弃此行程并重新开始' },
-    },
-  },
-  'dec_002': {
-    title: '预算审批',
-    description: '预估总费用为 $2,840，在你的 $3,000 预算范围内。是否批准继续？',
-    options: {
-      'opt_004': { label: '批准预算', description: '$2,840 的总费用可以接受' },
-      'opt_005': { label: '降低成本', description: '要求智能体寻找更便宜的替代方案' },
-    },
-  },
-  'dec_003': {
-    title: '住宿替代方案',
-    description: '星野京都（$310/晚）属于高端。是否考虑中端替代方案？',
-    options: {
-      'opt_006': { label: '保留星野京都', description: '入住豪华旅馆（3晚共 $1,240）' },
-      'opt_007': { label: '换至 Kanra 酒店', description: '中端选择 $180/晚（共 $540，省 $700）' },
-    },
-  },
 };
 
 const actionZh: Record<string, { description: string; result?: string }> = {
@@ -94,24 +66,6 @@ export function localizeEvents(events: AgentEvent[], lang: Lang): AgentEvent[] {
     ...evt,
     content: eventZh[evt.id] ?? evt.content,
   }));
-}
-
-export function localizeDecisions(decisions: AgentDecision[], lang: Lang): AgentDecision[] {
-  if (lang === 'en') return decisions;
-  return decisions.map((dec) => {
-    const tr = decisionZh[dec.id];
-    if (!tr) return dec;
-    return {
-      ...dec,
-      title: tr.title,
-      description: tr.description,
-      options: dec.options.map((opt) => ({
-        ...opt,
-        label: tr.options[opt.id]?.label ?? opt.label,
-        description: tr.options[opt.id]?.description ?? opt.description,
-      })),
-    };
-  });
 }
 
 export function localizeActions(actions: AgentAction[], lang: Lang): AgentAction[] {

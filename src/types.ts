@@ -216,6 +216,18 @@ export interface BReplanEntry {
   } | null;
 }
 
+// ===== B 侧对话接口（POST /api/chat/，见 B 仓库 docs/chat_api.md）=====
+// v1 纯对话：服务端无状态，history 由 C 端维护（服务端仅取最近 20 条）
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatResult {
+  reply: string;
+  elapsed_ms: number;
+}
+
 // ===== B 侧工具调用记录（GET /api/tool-calls/，0831 接入）=====
 export interface ToolCallRecord {
   tool: string; // scenic / food / hotel / map

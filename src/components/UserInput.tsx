@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, MapPin, Users, Coins, Sparkles, X, Plus, MessageSquareText, PlaneTakeoff, PlaneLanding, Route, Loader2 } from 'lucide-react';
+import { Send, MapPin, Users, Coins, Sparkles, X, Plus, MessageSquareText, PlaneTakeoff, PlaneLanding, Route, Loader2, AlertCircle } from 'lucide-react';
 import { useI18n } from '../i18n/I18nContext';
 import { DatePickerField, TimePickerField } from './Pickers';
 import type { TranslationKey } from '../i18n/translations';
@@ -97,14 +97,16 @@ interface UserInputProps {
 
 export default function UserInput({ onPlan, isRunning }: UserInputProps) {
   const { t } = useI18n();
+  // 默认日期：出发=今天（自动读取系统时间），返程由用户手动选择
+  const todayStr = new Date().toISOString().slice(0, 10);
   const [destination, setDestination] = useState('北京');
-  const [startDate, setStartDate] = useState('2026-04-10');
+  const [startDate, setStartDate] = useState(todayStr);
   const [departureTime, setDepartureTime] = useState('');
-  const [endDate, setEndDate] = useState('2026-04-13');
+  const [endDate, setEndDate] = useState('');
   const [travelers, setTravelers] = useState('2');
   const [budget, setBudget] = useState('3000');
-  const [maxDailyVisitHours, setMaxDailyVisitHours] = useState('6');
-  const [maxDailyCommuteMinutes, setMaxDailyCommuteMinutes] = useState('60');
+  const [maxDailyVisitHours, setMaxDailyVisitHours] = useState('10');
+  const [maxDailyCommuteMinutes, setMaxDailyCommuteMinutes] = useState('180');
   const [preferences, setPreferences] = useState<string[]>([]);
   const [prefInput, setPrefInput] = useState('');
   const [freeTextRequirement, setFreeTextRequirement] = useState('');
@@ -112,6 +114,7 @@ export default function UserInput({ onPlan, isRunning }: UserInputProps) {
   const [departureLocation, setDepartureLocation] = useState('');
   const [returnLocation, setReturnLocation] = useState('');
   const [transportPreference, setTransportPreference] = useState<TransportPreference | ''>('');
+  const [dateError, setDateError] = useState('');
 
   const addPreference = (pref?: string) => {
     const trimmed = (pref ?? prefInput).trim();
@@ -127,6 +130,15 @@ export default function UserInput({ onPlan, isRunning }: UserInputProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!endDate) {
+      setDateError(t('errReturnDateRequired'));
+      return;
+    }
+    if (endDate < startDate) {
+      setDateError(t('errReturnDateBeforeDeparture'));
+      return;
+    }
+    setDateError('');
     onPlan({
       destination,
       start_date: startDate,
@@ -242,7 +254,11 @@ export default function UserInput({ onPlan, isRunning }: UserInputProps) {
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">{t('endDate')}</label>
-          <DatePickerField value={endDate} onChange={setEndDate} />
+          <DatePickerField value={endDate} onChange={(v) => { setEndDate(v); setDateError(''); }} />
+          {dateError && <p className="text-xs text-red-500 flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            {dateError}
+          </p>}
         </div>
 
         <div className="space-y-1.5">

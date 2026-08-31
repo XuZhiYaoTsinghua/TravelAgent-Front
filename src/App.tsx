@@ -5,7 +5,7 @@ import UserInput from './components/UserInput';
 import ItineraryTimeline from './components/ItineraryTimeline';
 import MapView from './components/MapView';
 import AgentLog from './components/AgentLog';
-import DecisionPanel from './components/DecisionPanel';
+import ChatPanel from './components/ChatPanel';
 import ActionQueue from './components/ActionQueue';
 import NotificationBell from './components/NotificationBell';
 // 重组件按需分包：推理页/通知中心只在对应视图首次进入时加载，
@@ -15,10 +15,10 @@ const NotificationCenter = lazy(() => import('./components/NotificationCenter'))
 import { api } from './services/api';
 import { notificationService } from './services/notifications';
 import { loadSession, saveSession, clearSession } from './services/session';
-import { localizePlan, localizeEvents, localizeDecisions, localizeActions, localizeActionResult } from './services/mockLocalize';
+import { localizePlan, localizeEvents, localizeActions, localizeActionResult } from './services/mockLocalize';
 import { useI18n } from './i18n/I18nContext';
 import { translations } from './i18n/translations';
-import type { UserRequest, Plan, AgentEvent, AgentDecision, AgentAction, AppView, TravelNotification, NotificationType, ToolCallRecord, HotelCandidate, RestaurantOption } from './types';
+import type { UserRequest, Plan, AgentEvent, AgentAction, AppView, TravelNotification, NotificationType, ToolCallRecord, HotelCandidate, RestaurantOption } from './types';
 
 let idCounter = 0;
 const nextId = () => `gen-${++idCounter}`;
@@ -50,7 +50,6 @@ function App() {
   const restored = useRef(loadSession());
   const [plan, setPlan] = useState<Plan | null>(restored.current.plan);
   const [events, setEvents] = useState<AgentEvent[]>(restored.current.events);
-  const [decisions, setDecisions] = useState<AgentDecision[]>(restored.current.decisions);
   const [actions, setActions] = useState<AgentAction[]>(restored.current.actions);
   // 标记当前行程是否来自 localStorage 恢复（用于显示提示条与清除入口）
   const [restoredFromCache, setRestoredFromCache] = useState(restored.current.plan !== null);
@@ -130,11 +129,11 @@ function App() {
           return fresh.length ? [...prev, ...fresh] : prev;
         });
       }
-      const [actions, decisions] = await Promise.all([api.fetchActions(), api.fetchDecisions(lang)]);
+      // 决策面板已由对话面板取代：replans 只用于轮询检测时间线变化，不再上屏
+      const [actions, replans] = await Promise.all([api.fetchActions(), api.fetchDecisions(lang)]);
       setActions(actions);
-      setDecisions(decisions);
-      if (decisions.length > lastReplanCount.current) {
-        lastReplanCount.current = decisions.length;
+      if (replans.length > lastReplanCount.current) {
+        lastReplanCount.current = replans.length;
         const refreshed = await api.fetchTimeline();
         if (refreshed) setPlan(refreshed);
         const [tc, hl] = await Promise.all([
@@ -187,7 +186,6 @@ function App() {
     stopPolling();
     setPlan(null);
     setEvents([]);
-    setDecisions([]);
     setActions([]);
     setToolCalls([]);
     setHotels([]);
@@ -207,7 +205,6 @@ function App() {
     clearSession();
     setIsRunning(true);
     setPlan(null);
-    setDecisions([]);
     setActions([]);
     setToolCalls([]);
     setHotels([]);
@@ -224,7 +221,7 @@ function App() {
     if (api.isMock) {
       // mock 数据动态导入：生产构建（USE_MOCK=false）下该分支为死代码，
       // rollup 会整块剔除，演示数据不会进主包（此前静态导入导致 14 处残留）
-      const { mockEvents, mockActions, mockDecisions } = await import('./mock');
+      const { mockEvents, mockActions } = await import('./mock');
       const submittedRequest = await api.submitRequest(request);
 
       for (const evt of mockEvents) {
@@ -263,9 +260,6 @@ function App() {
       // 行程上屏即结束进度条，后续演示节奏事件不再拖住 isRunning（与真实路径一致）
       setIsRunning(false);
 
-      await delay(400);
-      setDecisions(mockDecisions.map((d) => ({ ...d, id: nextId() })));
-
       setEvents((prev) => [
         ...prev,
         { id: nextId(), type: 'final', content: t('msgItineraryDelivered'), timestamp: new Date().toISOString() },
@@ -293,7 +287,8 @@ function App() {
       // false——行程内容已上屏，进度条却还在爬升，观感是"规划完成却不显示完成"。
       // 现在：交付瞬间发 final 事件 + 落盘 + 结束进度条（99→100），补充数据转后台。
       setEvents((prev) => {
-        const next = [
+        // 显式标注：中间变量会丢失上下文类型，type: 'final' 被拓宽成 string
+        const next: AgentEvent[] = [
           ...prev,
           { id: nextId(), type: 'final', content: t('msgItineraryDelivered'), timestamp: new Date().toISOString() },
         ];
@@ -334,20 +329,6 @@ function App() {
     // 重复置 false 无害，且被新规划中止时上面的 aborted 检查保证不会误关新一轮
     setIsRunning(false);
   }, [lang, t, refreshLive, startPolling, stopPolling]);
-
-  const handleResolveDecision = useCallback((decisionId: string, optionId: string) => {
-    setDecisions((prev) =>
-      prev.map((d) =>
-        d.id === decisionId
-          ? {
-              ...d,
-              status: 'approved',
-              options: d.options.map((o) => ({ ...o, selected: o.id === optionId })),
-            }
-          : d
-      )
-    );
-  }, []);
 
   // 餐段换餐厅：候选来自 B 侧 food 工具直调，选中后本地覆盖行程项
   // （名称/坐标/人均/简介同步更新，地图标记随坐标联动；A 侧不感知此改动）
@@ -409,7 +390,6 @@ function App() {
   // （轮询经常不带来新数据，重算纯属浪费）
   const localizedPlan = useMemo(() => (plan ? localizePlan(plan, lang) : null), [plan, lang]);
   const localizedEvents = useMemo(() => localizeEvents(events, lang), [events, lang]);
-  const localizedDecisions = useMemo(() => localizeDecisions(decisions, lang), [decisions, lang]);
   const localizedActions = useMemo(() => localizeActions(actions, lang), [actions, lang]);
   // MapView 的 places 数组同样 memo：bounds 签名依赖其元素，稳定引用避免地图视野抖动
   const mapPlaces = useMemo(
@@ -532,7 +512,6 @@ function App() {
 
             <div className="lg:col-span-4 space-y-6">
               <MapView places={mapPlaces} />
-              <DecisionPanel decisions={localizedDecisions} onResolve={handleResolveDecision} />
             </div>
 
             <div className="lg:col-span-3 space-y-6">
@@ -574,6 +553,11 @@ function App() {
           <p className="text-xs text-slate-400">{t('footerText')}</p>
         </footer>
       )}
+
+      {/* AI 对话浮窗（右下角）：不在主布局列中，fixed 定位悬浮于所有视图之上。
+          key 绑定 plan.id：重新规划时组件重挂载，自动清空旧会话 history，
+          防止上一轮行程的 Q&A 污染 LLM 上下文 */}
+      <ChatPanel key={plan?.id ?? 'no-plan'} hasPlan={!!plan} />
     </div>
   );
 }

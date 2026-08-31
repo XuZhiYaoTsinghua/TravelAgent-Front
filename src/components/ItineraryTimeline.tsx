@@ -3,7 +3,7 @@ import { Plane, UtensilsCrossed, Camera, Building2, Compass, Clock, MapPin, Cale
 import { useI18n } from '../i18n/I18nContext';
 import { translations, type TranslationKey } from '../i18n/translations';
 import { api } from '../services/api';
-import { openExternalUrl } from '../services/externalUrl';
+import BookingWebView from './BookingWebView';
 import type { Plan, PlanItem, PlanItemCategory, ActivityStatus, RestaurantOption } from '../types';
 
 // 可展开文本：长文默认按行数压缩（line-clamp），溢出时尾部出现倒三角展开键，
@@ -210,6 +210,8 @@ function TimelineCard({ item, index, activeItemId, affectedItemIds, city, onSele
   const isAffected = status === 'affected';
   const isActive = status === 'active';
   const booking = getBookingUrl(item.place.category, item.place.name, city ?? '');
+  // 应用内 WebView 打开高德订票：左上角返回按钮始终可见，用户不会被"困"在高德页面
+  const [bookingView, setBookingView] = useState<{ url: string; title: string } | null>(null);
 
   // transport 段渲染为竞品式轻量通勤行：方式图标（高铁/航班/驾车/步行/骑行/公交）+ 起点→终点 + 距离·时长
   if (item.place.category === 'transport') {
@@ -256,6 +258,7 @@ function TimelineCard({ item, index, activeItemId, affectedItemIds, city, onSele
   }
 
   return (
+    <>
     <div className="relative pl-10 pb-6 last:pb-0 group">
       <div className={`absolute left-[18px] top-0 bottom-0 w-px ${isAffected ? 'bg-amber-300' : 'bg-slate-200'} group-last:bottom-auto`} />
       <div className={`absolute left-0 top-1 w-9 h-9 rounded-full ${cfg.bg} border-2 ${isAffected ? 'border-amber-300' : cfg.border} flex items-center justify-center ${cfg.color} ${isActive ? 'ring-4 ring-teal-400/30' : ''}`}>
@@ -321,27 +324,27 @@ function TimelineCard({ item, index, activeItemId, affectedItemIds, city, onSele
               </span>
             )}
           </div>
-          <a
-            href={booking.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              // 统一外链出口：Capacitor WebView 里 target=_blank 会被静默吞掉，
-              // 必须走 AppLauncher/window.open 兜底链（见 services/externalUrl.ts）
-              e.preventDefault();
-              void openExternalUrl(booking.url);
-            }}
+          <button
+            onClick={() => setBookingView({ url: booking.url, title: item.place.name })}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition font-medium"
           >
             {translations[lang][booking.labelKey]}
             <ExternalLink className="w-3 h-3" />
-          </a>
+          </button>
         </div>
         {item.place.category === 'food' && (
           <MealPicker item={item} city={city} onSelectMeal={onSelectMeal} />
         )}
       </div>
     </div>
+    {bookingView && (
+      <BookingWebView
+        url={bookingView.url}
+        title={bookingView.title}
+        onClose={() => setBookingView(null)}
+      />
+    )}
+    </>
   );
 }
 
